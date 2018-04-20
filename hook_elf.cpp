@@ -113,6 +113,7 @@ const char* getLibPath(const char* libName){
 
 SoInfo::SoInfo(const char* name, const struct stat* file_stat,
        off64_t file_offset){
+    logd("name: %s", name);
     if(name == NULL)return ;
     int readCount = 0;
     if(access(name, O_RDONLY) == 0){
@@ -158,7 +159,7 @@ void SoInfo::freeData(){
 
 
 void SoInfo::parser32BitSo(const char* libPath){
-
+    logd("parser32BitSo, libPath: %s", libPath);
 }
 void SoInfo::parser64BitSo(const char* libPath){
     int fd = open(libPath, O_RDONLY);
@@ -341,7 +342,22 @@ void SoInfo::parser64BitSo(uint64_t baseAddr, uint64_t fileSize) {
 /*cache all section headers END*/
 }
 
-
+void SoInfo::dumpDynamicSymbolSection(){
+    logd("dumpDynamicSymbolSection, mSectionCount: %d", mSectionCount);
+    for (int i = 0; i < mSectionCount; ++i) {
+        struct SectionHeader_s* tmpSectionHeader = &mSectionHeaders[i];
+        if(tmpSectionHeader->mSectionType == SHT_DYNSYM || tmpSectionHeader->mSectionType == SHT_SYMTAB){
+            int symbolCount = tmpSectionHeader->mSectionSize / tmpSectionHeader->mEntrySize;
+            struct Symbol_s* content = (struct Symbol_s*)mData[i];
+            logd("dumpDynamicSymbolSection, symbolCount: %d", symbolCount);
+            for (int j = 0; j < symbolCount; ++j) {
+                logd("==============================================");
+                logd("Symbol Index: %d", j);
+                dumpSymbol(&content[j]);
+            }
+        }
+    }
+}
 
 
 void SoInfo::dumpSymbol(struct Symbol_s* symbol){
